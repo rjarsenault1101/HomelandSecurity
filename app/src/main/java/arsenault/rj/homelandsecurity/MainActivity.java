@@ -2,8 +2,8 @@ package arsenault.rj.homelandsecurity;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -18,12 +18,11 @@ import exceptions.ImproperInputException;
 public class MainActivity extends AppCompatActivity {
 
     private static final int WIDTH = 8, HEIGHT = 8;
-    private static final int NUMBER_VALUES = 3;
-    private static final String INPUT_PATTERN_STRING = "\\(\\d,\\d,\\d\\)";
-    private static final String INPUT_CHECKER_STRING = "(\\(\\d,\\d,\\d\\),)*\\(\\d,\\d,\\d\\)";
+    private static final String INPUT_PATTERN_STRING = "\\(\\d*,\\d*,\\d*\\)";
+    private static final String INPUT_CHECKER_STRING = "(\\(\\d*,\\d*,\\d*\\),)*\\(\\d*,\\d*,\\d*\\)";
     private static final Pattern INPUT_CHECKER_PATTERN = Pattern.compile(INPUT_CHECKER_STRING);
     private static final Pattern INPUT_PATTERN = Pattern.compile(INPUT_PATTERN_STRING);
-    private int[][] pixels;
+    private int[] pixels;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -37,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     pixels = makeMap(array);
                     Bitmap image = createImage(pixels);
+                    ImageView iv = (ImageView) findViewById(R.id.imageView);
+                    iv.setImageBitmap(image);
                 } catch(ImproperInputException iie) {
                     input.setError("Improper input");
                 }
@@ -44,27 +45,21 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
-    private Bitmap createImage(int[][] pixels){
-        ImageView iv = (ImageView) findViewById(R.id.imageView);
-
-
+    private Bitmap createImage(int[] pixels){
+        return Bitmap.createBitmap(pixels, WIDTH, HEIGHT, Bitmap.Config.RGB_565);
     }
-    public static String printArray(int[][][] arr) {
+    public static String printArray(int[] arr) {
         StringBuilder b = new StringBuilder();
-        for(int i = 0; i< WIDTH; i++) {
-            for (int j = 0; j< HEIGHT; j++) {
-                b.append("(");
-                for (int k = 0; k < NUMBER_VALUES; k++) {
-                    b.append(arr[i][j][k]);
-                    b.append(k == NUMBER_VALUES-1? "" : ",");
-                }
-                b.append(i*j < WIDTH * HEIGHT? "),": ")");
-            }
+        for(int i = 0; i< WIDTH * HEIGHT; i++) {
+            b.append("(");
+            b.append(arr[i]);
+            b.append(",");
+            b.append(i < WIDTH * HEIGHT? "),": ")");
         }
         return b.toString();
     }
-    public static int[][] makeMap(String triplets) throws ImproperInputException {
-        int[][] output = new int[WIDTH][HEIGHT];
+    public static int[] makeMap(String triplets) throws ImproperInputException {
+        int[] output = new int[WIDTH*HEIGHT];
         Matcher input = INPUT_CHECKER_PATTERN.matcher(triplets);
         Matcher m = INPUT_PATTERN.matcher(triplets);
         if(!input.matches()) {
@@ -76,10 +71,13 @@ public class MainActivity extends AppCompatActivity {
             s = s.substring(1, s.indexOf(")"));
             Scanner scan = new Scanner(s);
             scan.useDelimiter(",");
-            int r = scan.nextInt()*32-1;
-            int g = scan.nextInt()*32-1;
-            int b = scan.nextInt()*32-1;
-            output[count / WIDTH][count % HEIGHT] = Color.rgb(r,g,b);
+            int r = scan.nextInt();
+            r = r < 0 ? 0 : r;
+            int g = scan.nextInt();
+            g = g < 0 ? 0 : g;
+            int b = scan.nextInt();
+            b = b < 0 ? 0 : b;
+            output[count] = Color.rgb(r,g,b);
 
             count++;
         }
